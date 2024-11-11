@@ -144,12 +144,17 @@ void loop() {
   // Serial.print("\tGyroZ: ");
   // Serial.println(GyroZ);
 
-  if(Serial2.available() > 0){
-    Serial2.print(roll);
-    Serial2.print("\t");
-    Serial2.print(pitch);
-    Serial2.print("\t");
-    Serial2.println(yaw);
+  if(Serial2.available()) {
+    char c = Serial2.read();
+    if(c == 'r') {
+      if(roll > 40){
+        String dataToSend = "Roll: " + String(roll) + "\tPitch: " + String(pitch) + "\tYaw: " + String(yaw) +"\n";
+        Serial2.print(dataToSend);
+      }else{
+        String dataToSend = "WOYYYY MAU JATUHHH";
+        Serial2.print(dataToSend);
+      }
+    }
   }
 
   delay(20);
