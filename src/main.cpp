@@ -125,19 +125,19 @@ void loop() {
   // Complementary Filter untuk Roll dan Pitch
   roll = alpha * (roll + GyroX * elapsedTime) + (1 - alpha) * accAngleX;
   pitch = alpha * (pitch + GyroY * elapsedTime) + (1 - alpha) * accAngleY;
-  roll = -roll;
 
   // Penanganan overflow untuk yaw agar tetap dalam rentang [-180, 180]
   if (yaw > 180) yaw -= 360;
   else if (yaw < -180) yaw += 360;
 
   // // Print hasil
-  // Serial.print("Roll: ");
-  // Serial.print(roll);
-  // Serial.print("\tPitch: ");
-  // Serial.print(pitch);
-  // Serial.print("\tYaw: ");
-  // Serial.print(yaw);
+  Serial.print("Roll: ");
+  Serial.print(roll);
+  Serial.print("\tPitch: ");
+  Serial.print(pitch);
+  Serial.print("\tYaw: ");
+  Serial.print(yaw);
+  Serial.println();
   // Serial.print("\tGyroX: ");
   // Serial.print(GyroX);
   // Serial.print("\tGyroY: ");
@@ -146,9 +146,9 @@ void loop() {
   // Serial.println(GyroZ);
 
   // Print hasil
-  if(roll < 40){
+  if(roll < 40 && roll > -40){
     Serial2.print("Roll: ");
-    Serial2.print(roll);
+    Serial2.print(-roll);
     Serial2.print("\tPitch: ");
     Serial2.print(pitch);
     Serial2.print("\tYaw: ");
@@ -157,5 +157,6 @@ void loop() {
   }else{
     Serial2.println("WOYYYYYYYYYYYYYYYYY MAU JATOHHH");
   }
+  
   delay(20);
 }
