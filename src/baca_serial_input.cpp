@@ -174,39 +174,27 @@ void loop() {
   }
 
   if (currentTime - previousSerialCheckTime >= SERIAL_CHECK_INTERVAL) {
-    previousSerialCheckTime = currentTime;
+  previousSerialCheckTime = currentTime;
 
-    // Check if serial data is available
-    while (Serial.available() > 0) {
-      char inChar = Serial.read();
-      
-      // Process numeric input and newline
-      if (isDigit(inChar) || inChar == '.' || inChar == '-') {
-        if (bufferIndex < BUFFER_SIZE - 1) {
-          inputBuffer[bufferIndex++] = inChar;
-        }
-      } 
-      else if (inChar == '\n') {
-        // Null terminate the string
-        inputBuffer[bufferIndex] = '\0';
-        
-        // Convert string to float and update threshold
-        float newThreshold = atof(inputBuffer);
-        
-        // Validate the new threshold
-        if (newThreshold >= 0 && newThreshold <= 90) {
-          alertThreshold = newThreshold;
-          Serial.print("Alert threshold updated to: ");
-          Serial.println(alertThreshold);
-        } else {
-          Serial.println("Invalid threshold value. Please enter a value between 0 and 90 degrees.");
-        }
-        
-        // Reset buffer
-        bufferIndex = 0;
-      }
+  // Check if serial data is available
+  if (Serial2.available() > 0) {
+    float newThreshold = Serial2.parseFloat();
+
+    // Validate the new threshold
+    if (!isnan(newThreshold) && newThreshold >= 0 && newThreshold <= 90) {
+      alertThreshold = newThreshold;
+      Serial.print("Alert threshold updated to: ");
+      Serial.println(alertThreshold);
+    } else {
+      Serial.println("Invalid threshold value. Please enter a value between 0 and 90 degrees.");
+    }
+
+    // Clear any remaining characters in the buffer
+    while (Serial2.available() > 0) {
+      Serial2.read();
     }
   }
+}
 
     // Ubah nilai sudut maksimal
     // Serial.print("Input new value of maximum angle: ");
