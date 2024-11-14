@@ -12,6 +12,18 @@ float AccErrorX, AccErrorY, GyroErrorX, GyroErrorY, GyroErrorZ;
 unsigned long previousTime;
 const int numCalibrationSamples = 2000;
 const float alpha = 0.9; // Complementary filter constant
+float alertThreshold = 40;
+
+//timing variabels
+unsigned long previousSensorTime = 0;
+unsigned long previousSerialCheckTime = 0;
+const unsigned long SENSOR_INTERVAL = 100;    // Read sensor every 100ms
+const unsigned long SERIAL_CHECK_INTERVAL = 50;  //Check serial input every 50ms
+
+//buffer for serial input
+const int BUFFER_SIZE = 10;
+char inputBuffer[BUFFER_SIZE];
+int bufferIndex = 0;
 
 // Kalman filter parameters
 const float Q = 0.01; // process noise covariance
@@ -111,52 +123,84 @@ void setup() {
 
 void loop() {
   unsigned long currentTime = millis();
-  float elapsedTime = (currentTime - previousTime) / 1000.0;
-  previousTime = currentTime;
 
-  readAcc();
-  readGyro();
+  if(currentTime - previousSensorTime >= SENSOR_INTERVAL){
+    float elapsedTime = (currentTime - previousTime) / 1000.0;
+    previousTime = currentTime;
 
-  // Integrasi gyro untuk menghitung angle
-  gyroAngleX += GyroX * elapsedTime;
-  gyroAngleY += GyroY * elapsedTime;
-  yaw += GyroZ * elapsedTime;
+    readAcc();
+    readGyro();
 
-  // Complementary Filter untuk Roll dan Pitch
-  roll = alpha * (roll + GyroX * elapsedTime) + (1 - alpha) * accAngleX;
-  pitch = alpha * (pitch + GyroY * elapsedTime) + (1 - alpha) * accAngleY;
+    // Integrasi gyro untuk menghitung angle
+    gyroAngleX += GyroX * elapsedTime;
+    gyroAngleY += GyroY * elapsedTime;
+    yaw += GyroZ * elapsedTime;
 
-  // Penanganan overflow untuk yaw agar tetap dalam rentang [-180, 180]
-  if (yaw > 180) yaw -= 360;
-  else if (yaw < -180) yaw += 360;
+    // Complementary Filter untuk Roll dan Pitch
+    roll = alpha * (roll + GyroX * elapsedTime) + (1 - alpha) * accAngleX;
+    pitch = alpha * (pitch + GyroY * elapsedTime) + (1 - alpha) * accAngleY;
 
-  // // Print hasil
-  Serial.print("Roll: ");
-  Serial.print(roll);
-  Serial.print("\tPitch: ");
-  Serial.print(pitch);
-  Serial.print("\tYaw: ");
-  Serial.print(yaw);
-  Serial.println();
-  // Serial.print("\tGyroX: ");
-  // Serial.print(GyroX);
-  // Serial.print("\tGyroY: ");
-  // Serial.print(GyroY);
-  // Serial.print("\tGyroZ: ");
-  // Serial.println(GyroZ);
+    // Penanganan overflow untuk yaw agar tetap dalam rentang [-180, 180]
+    if (yaw > 180) yaw -= 360;
+    else if (yaw < -180) yaw += 360;
 
-  // Print hasil
-  if(roll < 40 && roll > -40){
-    Serial2.print("Roll: ");
-    Serial2.print(-roll);
-    Serial2.print("\tPitch: ");
-    Serial2.print(pitch);
-    Serial2.print("\tYaw: ");
-    Serial2.print(yaw);
-    Serial2.println();
-  }else{
-    Serial2.println("WOYYYYYYYYYYYYYYYYY MAU JATOHHH");
+    // // Print hasil
+    // Serial.print("Roll: ");
+    // Serial.print(roll);
+    // Serial.print("\tPitch: ");
+    // Serial.print(pitch);
+    // Serial.print("\tYaw: ");
+    // Serial.print(yaw);
+    // Serial.println();
+    // Serial.print("\tGyroX: ");
+    // Serial.print(GyroX);
+    // Serial.print("\tGyroY: ");
+    // Serial.print(GyroY);
+    // Serial.print("\tGyroZ: ");
+    // Serial.println(GyroZ);
+
+    // Print hasil
+    if (roll < alertThreshold && roll > -alertThreshold) {
+      Serial.print("Roll: ");
+      Serial.print(-roll);
+      Serial.print("\tPitch: ");
+      Serial.print(pitch);
+      Serial.print("\tYaw: ");
+      Serial.print(yaw);
+      Serial.print("\tsudut maks: ");
+    } else {
+      Serial2.println("WOYYYYYYYYYYYYYYYYY MAU JATOHHH");
+    }
   }
-  
+
+  if (currentTime - previousSerialCheckTime >= SERIAL_CHECK_INTERVAL) {
+  previousSerialCheckTime = currentTime;
+
+  // Check if serial data is available
+  if (Serial2.available() > 0) {
+    float newThreshold = Serial2.parseFloat();
+
+    // Validate the new threshold
+    if (!isnan(newThreshold) && newThreshold >= 0 && newThreshold <= 90) {
+      alertThreshold = newThreshold;
+      Serial.print("Alert threshold updated to: ");
+      Serial.println(alertThreshold);
+    } else {
+      Serial.println("Invalid threshold value. Please enter a value between 0 and 90 degrees.");
+    }
+
+    // Clear any remaining characters in the buffer
+    while (Serial2.available() > 0) {
+      Serial2.read();
+    }
+  }
+}
+
+    // Ubah nilai sudut maksimal
+    // Serial.print("Input new value of maximum angle: ");
+    // while (Serial.available() == 0) {
+    // }
+    // sudut_maks = Serial.parseFloat();
+
   delay(20);
 }
