@@ -12,6 +12,7 @@ float AccErrorX, AccErrorY, GyroErrorX, GyroErrorY, GyroErrorZ;
 unsigned long previousTime;
 const int numCalibrationSamples = 2000;
 const float alpha = 0.9; // Complementary filter constant
+float sudut_maks = 40;
 
 // Kalman filter parameters
 const float Q = 0.01; // process noise covariance
@@ -130,14 +131,21 @@ void loop() {
   if (yaw > 180) yaw -= 360;
   else if (yaw < -180) yaw += 360;
 
+  Serial.print("Input new value of maximum angle: ");
+
+  while (Serial.available() == 0) {
+  }
+
+  sudut_maks = Serial.parseFloat();
+
   // // Print hasil
-  Serial.print("Roll: ");
-  Serial.print(roll);
-  Serial.print("\tPitch: ");
-  Serial.print(pitch);
-  Serial.print("\tYaw: ");
-  Serial.print(yaw);
-  Serial.println();
+  // Serial.print("Roll: ");
+  // Serial.print(roll);
+  // Serial.print("\tPitch: ");
+  // Serial.print(pitch);
+  // Serial.print("\tYaw: ");
+  // Serial.print(yaw);
+  // Serial.println();
   // Serial.print("\tGyroX: ");
   // Serial.print(GyroX);
   // Serial.print("\tGyroY: ");
@@ -146,14 +154,17 @@ void loop() {
   // Serial.println(GyroZ);
 
   // Print hasil
-  if(roll < 40 && roll > -40){
-    Serial2.print("Roll: ");
-    Serial2.print(-roll);
-    Serial2.print("\tPitch: ");
-    Serial2.print(pitch);
-    Serial2.print("\tYaw: ");
-    Serial2.print(yaw);
-    Serial2.println();
+  if(roll < sudut_maks && roll > -sudut_maks){
+    Serial.print("Roll: ");
+    Serial.print(-roll);
+    Serial.print("\tPitch: ");
+    Serial.print(pitch);
+    Serial.print("\tYaw: ");
+    Serial.print(yaw);
+    Serial.print("\tsudut maks: ");
+    Serial.print(sudut_maks);
+    Serial.println();
+
   }else{
     Serial2.println("WOYYYYYYYYYYYYYYYYY MAU JATOHHH");
   }
